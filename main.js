@@ -20,6 +20,9 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 // Ambient sound
 const listener = new THREE.AudioListener();
 camera.add(listener);
@@ -64,9 +67,12 @@ const roofMaterial = new THREE.MeshStandardMaterial({
 //Mesh
 const plane = new THREE.Mesh(planeGeometry, grassMaterial);
 scene.add(plane);
+plane.receiveShadow = true;
 plane.rotation.x = -1.6;
 
 const house = new THREE.Mesh(houseGeometry, houseMaterial);
+house.castShadow = true;
+house.receiveShadow = true;
 house.position.x = 10;
 house.position.y = 4;
 house.position.z = -10;
@@ -83,19 +89,21 @@ scene.add(roof);
 const lightningFolder = gui.addFolder("Lighting");
 const pointLightFolder = lightningFolder.addFolder("Pointlight");
 const ambientLightFolder = lightningFolder.addFolder("Ambientlight");
+
 const pointLight = new THREE.PointLight(0xffffff, 2);
-pointLight.position.x = 0.7;
-pointLight.position.y = 2.8;
-pointLight.position.z = 0;
-pointLight.intensity = 10;
+pointLight.castShadow = true;
+pointLight.position.x = -7.6;
+pointLight.position.y = 28;
+pointLight.position.z = 6;
+pointLight.intensity = 72;
 scene.add(pointLight);
 
 pointLightFolder.add(pointLight.position, "x");
 pointLightFolder.add(pointLight.position, "y");
 pointLightFolder.add(pointLight.position, "z");
-pointLightFolder.add(pointLight, "intensity", 0, 50);
+pointLightFolder.add(pointLight, "intensity", 0, 100);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(ambientLight);
 ambientLightFolder.add(ambientLight, "intensity", 0, 5);
 
@@ -104,11 +112,83 @@ camera.position.z = 20;
 camera.position.y = 15;
 camera.position.x = 1;
 
+//Fog
+const settings = {
+  enableFog: false,
+  fogNear: 1,
+  fogFar: 100,
+};
+
+function updateFog() {
+  if (settings.enableFog) {
+    scene.fog = new THREE.Fog(0x87ceeb, settings.fogNear, settings.fogFar); //Linear fog
+  } else {
+    scene.fog = null;
+  }
+}
+
+const fogFolder = gui.addFolder("Fog");
+fogFolder.add(settings, "enableFog").name("Enable Fog").onChange(updateFog);
+fogFolder.add(settings, "fogNear", 1, 50).name("Fog Near").onChange(updateFog);
+fogFolder.add(settings, "fogFar", 50, 200).name("Fog Far").onChange(updateFog);
+updateFog();
+
+//Rain
+const raindropCount = 200000;
+const rainGeometry = new THREE.BufferGeometry();
+const raindropPositions = new Float32Array(raindropCount * 3); // x, y, z for each raindrop
+
+const rainSettings = {
+  enableRain: true,
+};
+
+function updateRainVisibility() {
+  rain.visible = rainSettings.enableRain;
+}
+
+for (let i = 0; i < raindropCount; i++) {
+  raindropPositions[i * 3 + 0] = Math.random() * 400 - 200; // x
+  raindropPositions[i * 3 + 1] = Math.random() * 500 - 250; // y
+  raindropPositions[i * 3 + 2] = Math.random() * 400 - 200; // z
+}
+
+rainGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(raindropPositions, 3)
+);
+
+const rainMaterial = new THREE.PointsMaterial({
+  color: 0xaaaaaa,
+  size: 0.1,
+  transparent: true,
+});
+
+const rain = new THREE.Points(rainGeometry, rainMaterial);
+const rainFolder = gui.addFolder("Rain");
+rainFolder
+  .add(rainSettings, "enableRain")
+  .name("Enable Rain")
+  .onChange(updateRainVisibility);
+scene.add(rain);
+updateRainVisibility();
+
 //Orbitcontrols
 const controls = new OrbitControls(camera, renderer.domElement);
 
 function animate() {
   requestAnimationFrame(animate);
+
+  // Make the raindrops fall
+  let positions = rain.geometry.attributes.position.array;
+  for (let i = 0; i < positions.length; i += 3) {
+    positions[i + 1] -= 1; // Move each raindrop down on the y-axis
+
+    if (positions[i + 1] < -200) {
+      // Reset the raindrop's position when it goes off screen
+      positions[i + 1] = 200;
+    }
+  }
+  rain.geometry.attributes.position.needsUpdate = true; // Required for updating the geometry
   renderer.render(scene, camera);
 }
 
