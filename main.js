@@ -47,13 +47,20 @@ soundFolder
   });
 
 //Objects
-const planeGeometry = new THREE.PlaneGeometry(50, 50);
+const planeGeometry = new THREE.PlaneGeometry(100, 100, 32, 32);
+const vertices = planeGeometry.attributes.position.array;
+for (let i = 0; i < vertices.length; i += 3) {
+  // Modify only the z-coordinate of each vertex
+  vertices[i + 2] = Math.random() * 0.2; // Adjust Z value for height variation
+}
+planeGeometry.computeVertexNormals(); // To smooth out the lighting
+
 const houseGeometry = new THREE.BoxGeometry(3, 10, 3);
 const roofGeometry = new THREE.ConeGeometry(3, 5, 4);
-const roadGeometry = new THREE.PlaneGeometry(4, 50);
-const roadGeometry2 = new THREE.PlaneGeometry(4, 24);
-const roadGeometry3 = new THREE.PlaneGeometry(4, 36);
-const waterGeometry = new THREE.PlaneGeometry(11, 31);
+const roadGeometry = new THREE.PlaneGeometry(4, 100); //OK
+const roadGeometry2 = new THREE.PlaneGeometry(4, 42);
+const roadGeometry3 = new THREE.PlaneGeometry(4, 0);
+const waterGeometry = new THREE.PlaneGeometry(30, 45);
 
 //Materials
 const textureLoader = new THREE.TextureLoader();
@@ -103,7 +110,7 @@ scene.add(road2);
 const road3 = new THREE.Mesh(roadGeometry2, roadMaterial);
 road3.rotation.x = -Math.PI / 2; // Rotate to lay flat
 road3.rotation.z = Math.PI / 2;
-road3.position.set(0, 0.1, -7);
+road3.position.set(-29, 0.1, -7);
 scene.add(road3);
 
 const road4 = new THREE.Mesh(roadGeometry3, roadMaterial);
@@ -112,10 +119,10 @@ road4.position.set(10, 0.1, -7);
 scene.add(road4);
 
 const water = new Water(waterGeometry, {
-  textureWidth: 512,
-  textureHeight: 512,
+  textureWidth: 1024,
+  textureHeight: 1024,
   waterNormals: new THREE.TextureLoader().load(
-    "public/water.png",
+    "public/water-normal.jpg",
     function (texture) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     }
@@ -123,12 +130,12 @@ const water = new Water(waterGeometry, {
   alpha: 1.0,
   sunDirection: new THREE.Vector3(),
   sunColor: 0xffffff,
-  waterColor: 0x001e0f,
-  distortionScale: 3,
+  waterColor: 0x00008b,
+  distortionScale: 3.7,
   fog: scene.fog !== undefined,
 });
 
-water.position.set(18.5, 0.1, -8.4);
+water.position.set(30, 0.1, -20);
 water.rotation.x = -Math.PI / 2;
 scene.add(water);
 
@@ -283,7 +290,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 function animate() {
   requestAnimationFrame(animate);
 
-  water.material.uniforms["time"].value += 1.0 / 60.0;
+  water.material.uniforms["time"].value += 1.0 / 500.0;
 
   // Make the raindrops fall
   let positions = rain.geometry.attributes.position.array;
