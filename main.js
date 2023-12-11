@@ -113,24 +113,34 @@ camera.position.y = 15;
 camera.position.x = 1;
 
 //Fog
-const settings = {
+const fogSettings = {
   enableFog: false,
   fogNear: 1,
   fogFar: 100,
 };
 
 function updateFog() {
-  if (settings.enableFog) {
-    scene.fog = new THREE.Fog(0x87ceeb, settings.fogNear, settings.fogFar); //Linear fog
+  if (fogSettings.enableFog) {
+    scene.fog = new THREE.Fog(
+      0x87ceeb,
+      fogSettings.fogNear,
+      fogSettings.fogFar
+    ); //Linear fog
   } else {
     scene.fog = null;
   }
 }
 
 const fogFolder = gui.addFolder("Fog");
-fogFolder.add(settings, "enableFog").name("Enable Fog").onChange(updateFog);
-fogFolder.add(settings, "fogNear", 1, 50).name("Fog Near").onChange(updateFog);
-fogFolder.add(settings, "fogFar", 50, 200).name("Fog Far").onChange(updateFog);
+fogFolder.add(fogSettings, "enableFog").name("Enable Fog").onChange(updateFog);
+fogFolder
+  .add(fogSettings, "fogNear", 1, 50)
+  .name("Fog Near")
+  .onChange(updateFog);
+fogFolder
+  .add(fogSettings, "fogFar", 50, 200)
+  .name("Fog Far")
+  .onChange(updateFog);
 updateFog();
 
 //Rain
@@ -139,7 +149,7 @@ const rainGeometry = new THREE.BufferGeometry();
 const raindropPositions = new Float32Array(raindropCount * 3); // x, y, z for each raindrop
 
 const rainSettings = {
-  enableRain: true,
+  enableRain: false,
 };
 
 function updateRainVisibility() {
@@ -171,6 +181,54 @@ rainFolder
   .onChange(updateRainVisibility);
 scene.add(rain);
 updateRainVisibility();
+
+//Sun
+const sunLight = new THREE.PointLight(0xffffff, 1000);
+sunLight.position.set(22, 35, 16);
+sunLight.castShadow = true;
+scene.add(sunLight);
+
+const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+sunMesh.position.copy(sunLight.position);
+scene.add(sunMesh);
+
+const sunSettings = {
+  sunIntensity: 1000,
+  sunPositionX: 22,
+  sunPositionY: 35,
+  sunPositionZ: 16,
+};
+
+const sunFolder = lightningFolder.addFolder("Sun");
+sunFolder
+  .add(sunSettings, "sunIntensity", 0, 2000)
+  .name("Intensity")
+  .onChange((value) => {
+    sunLight.intensity = value;
+  });
+sunFolder
+  .add(sunSettings, "sunPositionX", -100, 100)
+  .name("Position X")
+  .onChange((value) => {
+    sunLight.position.x = value;
+    sunMesh.position.x = value; // Update sphere position
+  });
+sunFolder
+  .add(sunSettings, "sunPositionY", -100, 100)
+  .name("Position Y")
+  .onChange((value) => {
+    sunLight.position.y = value;
+    sunMesh.position.y = value; // Update sphere position
+  });
+sunFolder
+  .add(sunSettings, "sunPositionZ", -100, 100)
+  .name("Position Z")
+  .onChange((value) => {
+    sunLight.position.z = value;
+    sunMesh.position.z = value; // Update sphere position
+  });
 
 //Orbitcontrols
 const controls = new OrbitControls(camera, renderer.domElement);
