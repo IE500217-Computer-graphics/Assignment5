@@ -2,7 +2,7 @@ import "./style.css";
 import * as dat from "dat.gui";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { textureLoad } from "three/nodes";
+import { Water } from "three/examples/jsm/objects/Water.js";
 
 //Debug
 const gui = new dat.GUI();
@@ -23,7 +23,7 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// Ambient sound
+//Ambient sound
 const listener = new THREE.AudioListener();
 camera.add(listener);
 const sound = new THREE.Audio(listener);
@@ -34,13 +34,13 @@ audioLoader.load("sound/ambient.mp3", (buffer) => {
   sound.play();
 });
 
-const soundParams = {
+const soundSettings = {
   volume: 0,
 };
 
 const soundFolder = gui.addFolder("Sound");
 soundFolder
-  .add(soundParams, "volume", 0, 1)
+  .add(soundSettings, "volume", 0, 1)
   .name("Volume")
   .onChange((value) => {
     sound.setVolume(value);
@@ -49,7 +49,11 @@ soundFolder
 //Objects
 const planeGeometry = new THREE.PlaneGeometry(50, 50);
 const houseGeometry = new THREE.BoxGeometry(3, 10, 3);
-const roofGeometry = new THREE.ConeGeometry(3, 6, 4);
+const roofGeometry = new THREE.ConeGeometry(3, 5, 4);
+const roadGeometry = new THREE.PlaneGeometry(4, 50);
+const roadGeometry2 = new THREE.PlaneGeometry(4, 24);
+const roadGeometry3 = new THREE.PlaneGeometry(4, 36);
+const waterGeometry = new THREE.PlaneGeometry(11, 31);
 
 //Materials
 const textureLoader = new THREE.TextureLoader();
@@ -64,26 +68,69 @@ const roofMaterial = new THREE.MeshStandardMaterial({
   color: "grey",
 });
 
+const roadMaterial = new THREE.MeshStandardMaterial({
+  color: "darkgrey",
+});
+
 //Mesh
 const plane = new THREE.Mesh(planeGeometry, grassMaterial);
-scene.add(plane);
 plane.receiveShadow = true;
-plane.rotation.x = -1.6;
+plane.rotation.x = -Math.PI / 2; // Rotate to lay flat
+scene.add(plane);
 
 const house = new THREE.Mesh(houseGeometry, houseMaterial);
 house.castShadow = true;
 house.receiveShadow = true;
-house.position.x = 10;
-house.position.y = 4;
-house.position.z = -10;
+house.position.set(5, 4, -12);
 scene.add(house);
 
 const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-roof.position.x = 10;
-roof.position.y = 12;
-roof.position.z = -10;
+roof.position.set(5, 11, -12);
 roof.rotation.y = 45 * (Math.PI / 180);
 scene.add(roof);
+
+const road = new THREE.Mesh(roadGeometry, roadMaterial);
+road.rotation.x = -Math.PI / 2; // Rotate to lay flat
+road.position.set(-10, 0.1, 0);
+scene.add(road);
+
+const road2 = new THREE.Mesh(roadGeometry, roadMaterial);
+road2.rotation.x = -Math.PI / 2; // Rotate to lay flat
+road2.rotation.z = Math.PI / 2;
+road2.position.set(0, 0.1, 10);
+scene.add(road2);
+
+const road3 = new THREE.Mesh(roadGeometry2, roadMaterial);
+road3.rotation.x = -Math.PI / 2; // Rotate to lay flat
+road3.rotation.z = Math.PI / 2;
+road3.position.set(0, 0.1, -7);
+scene.add(road3);
+
+const road4 = new THREE.Mesh(roadGeometry3, roadMaterial);
+road4.rotation.x = -Math.PI / 2; // Rotate to lay flat
+road4.position.set(10, 0.1, -7);
+scene.add(road4);
+
+const water = new Water(waterGeometry, {
+  textureWidth: 512,
+  textureHeight: 512,
+  waterNormals: new THREE.TextureLoader().load(
+    "public/water.png",
+    function (texture) {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    }
+  ),
+  alpha: 1.0,
+  sunDirection: new THREE.Vector3(),
+  sunColor: 0xffffff,
+  waterColor: 0x001e0f,
+  distortionScale: 3,
+  fog: scene.fog !== undefined,
+});
+
+water.position.set(18.5, 0.1, -8.4);
+water.rotation.x = -Math.PI / 2;
+scene.add(water);
 
 // Lighting
 const lightningFolder = gui.addFolder("Lighting");
@@ -95,7 +142,7 @@ pointLight.castShadow = true;
 pointLight.position.x = -7.6;
 pointLight.position.y = 28;
 pointLight.position.z = 6;
-pointLight.intensity = 72;
+pointLight.intensity = 0;
 scene.add(pointLight);
 
 pointLightFolder.add(pointLight.position, "x");
@@ -103,7 +150,7 @@ pointLightFolder.add(pointLight.position, "y");
 pointLightFolder.add(pointLight.position, "z");
 pointLightFolder.add(pointLight, "intensity", 0, 100);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0);
 scene.add(ambientLight);
 ambientLightFolder.add(ambientLight, "intensity", 0, 5);
 
@@ -235,6 +282,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 function animate() {
   requestAnimationFrame(animate);
+
+  water.material.uniforms["time"].value += 1.0 / 60.0;
 
   // Make the raindrops fall
   let positions = rain.geometry.attributes.position.array;
