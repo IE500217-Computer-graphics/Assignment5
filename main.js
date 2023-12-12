@@ -65,6 +65,63 @@ gltfLoader.load(
   }
 );
 
+//Skyscrapers
+let skyscraperModel1;
+gltfLoader.load(
+  "public/skyscrapers/skyscraper_2/scene.gltf",
+  function (gltf) {
+    skyscraperModel1 = gltf.scene;
+    addSkyscraper(2, 8, 127,0.5,skyscraperModel1);
+    addSkyscraper(55, 8, 127,0.5,skyscraperModel1);
+    addSkyscraper(2, 8, 145,0.5,skyscraperModel1);
+    // addSkyscraper(0, 0, 10,1,skyscraperModel1);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  }, 
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+let skyscraperModel2;
+gltfLoader.load(
+  "public/skyscrapers/skyscraper_3/scene.gltf",
+  function (gltf) {
+    skyscraperModel2 = gltf.scene;
+    addSkyscraper(0, 0, 20,0.1,skyscraperModel2);
+    addSkyscraper(0, 0, 40,0.1,skyscraperModel2);
+    addSkyscraper(21, 0, 40,0.1,skyscraperModel2);
+    addSkyscraper(41, 0, 40,0.1,skyscraperModel2);
+    addSkyscraper(-23, 0, 1,0.1,skyscraperModel2);
+    addSkyscraper(-43, 0, 1,0.1,skyscraperModel2);
+    // addSkyscraper(0, 0, 10,1,skyscraperModel2);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  }, 
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addSkyscraper(x, y, z,scale,model) {
+  let skyscraper = model.clone();
+  skyscraper.scale.set(1 * scale, 1 * scale, 1 * scale);
+  skyscraper.position.set(x, y, z);
+  
+
+  // Apply shadows, traverse through 3D object
+  skyscraper.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  scene.add(skyscraper);
+}
+  
+
 //Trees
 let treeModel;
 gltfLoader.load(
@@ -130,6 +187,8 @@ function addBush(x, y, z) {
   });
   scene.add(bush);
 }
+
+
 
 //Flowers
 let grassModel;
@@ -292,7 +351,7 @@ pointLightFolder.add(pointLight.position, "y");
 pointLightFolder.add(pointLight.position, "z");
 pointLightFolder.add(pointLight, "intensity", 0, 100);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(ambientLight);
 ambientLightFolder.add(ambientLight, "intensity", 0, 5);
 
@@ -375,7 +434,7 @@ updateRainVisibility();
 
 //Sun & pointlight
 const sunLight = new THREE.PointLight(0xffffff, 1000);
-sunLight.position.set(22, 90, 16);
+sunLight.position.set(22, 150, 16);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
@@ -388,33 +447,33 @@ scene.add(sunMesh);
 const sunSettings = {
   sunIntensity: 1500,
   sunPositionX: 22,
-  sunPositionY: 90,
+  sunPositionY: 150,
   sunPositionZ: 16,
 };
 
 const sunFolder = lightningFolder.addFolder("Sun");
 sunFolder
-  .add(sunSettings, "sunIntensity", 0, 5000)
+  .add(sunSettings, "sunIntensity", 0, 10000)
   .name("Intensity")
   .onChange((value) => {
     sunLight.intensity = value;
   });
 sunFolder
-  .add(sunSettings, "sunPositionX", -100, 100)
+  .add(sunSettings, "sunPositionX")
   .name("Position X")
   .onChange((value) => {
     sunLight.position.x = value;
     sunMesh.position.x = value; // Update sphere position
   });
 sunFolder
-  .add(sunSettings, "sunPositionY", -100, 150)
+  .add(sunSettings, "sunPositionY")
   .name("Position Y")
   .onChange((value) => {
     sunLight.position.y = value;
     sunMesh.position.y = value; // Update sphere position
   });
 sunFolder
-  .add(sunSettings, "sunPositionZ", -100, 100)
+  .add(sunSettings, "sunPositionZ")
   .name("Position Z")
   .onChange((value) => {
     sunLight.position.z = value;
