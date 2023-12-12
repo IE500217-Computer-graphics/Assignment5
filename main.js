@@ -48,6 +48,7 @@ gltfLoader.load(
 
     boat = gltf.scene;
 
+    // Shadows can only be applied to meshes
     boat.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
