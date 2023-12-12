@@ -5,12 +5,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
-//Debug
+//Controller
 const gui = new dat.GUI();
 
 //Scene & renderer
 const scene = new THREE.Scene();
-//scene.background = new THREE.Color(0x87ceeb);
 const camera = new THREE.PerspectiveCamera(
   80,
   window.innerWidth / window.innerHeight,
@@ -21,9 +20,11 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+//Enable shadows
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+//Create skybox background
 const skyboxLoader = new THREE.CubeTextureLoader();
 const skybox = skyboxLoader.load([
   "public/skybox/right.bmp",
@@ -35,20 +36,20 @@ const skybox = skyboxLoader.load([
 ]);
 scene.background = skybox;
 
+//Create GLTFLoader for gltf. file 3D object importing
 const gltfLoader = new GLTFLoader();
 
+//Boat
 let boat;
-
 gltfLoader.load(
   "public/wooden_boat-gltf/scene.gltf",
   function (gltf) {
     scene.add(gltf.scene);
     gltf.scene.scale.set(0.04, 0.04, 0.04); //Scale down boat
     gltf.scene.position.set(22, 0, -30);
-
     boat = gltf.scene;
 
-    // Shadows can only be applied to meshes
+    // Apply shadows, traverse through 3D object
     boat.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
@@ -64,18 +65,15 @@ gltfLoader.load(
   }
 );
 
+//Trees
 let treeModel;
-
 gltfLoader.load(
   "public/pine_tree/scene.gltf",
   function (gltf) {
     treeModel = gltf.scene;
-
-    // Example: Add trees at different locations
     addTree(-4, 0, -28);
     addTree(-2, 0, -15);
     addTree(2, 0, 5);
-    // Add as many trees as you like
   },
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
@@ -90,23 +88,22 @@ function addTree(x, y, z) {
   tree.scale.set(4, 4, 4);
   tree.position.set(x, y, z);
 
+  // Apply shadows, traverse through 3D object
   tree.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
     }
   });
-
   scene.add(tree);
 }
 
+//Bushes
 let bushModel;
-
 gltfLoader.load(
   "public/tall_bush/scene.gltf",
   function (gltf) {
     bushModel = gltf.scene;
-
     addBush(-2, 0, -35);
     addBush(4, 0, -20);
     addBush(-3, 0, -5);
@@ -124,23 +121,22 @@ function addBush(x, y, z) {
   bush.scale.set(1, 1, 1);
   bush.position.set(x, y, z);
 
+  // Apply shadows, traverse through 3D object
   bush.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
     }
   });
-
   scene.add(bush);
 }
 
+//Flowers
 let grassModel;
-
 gltfLoader.load(
   "public/grass_patch/scene.gltf",
   function (gltf) {
     grassModel = gltf.scene;
-
     addGrass(-3, 0, -23);
     addGrass(6, 0, -10);
     addGrass(8, 0, 5);
@@ -158,13 +154,14 @@ function addGrass(x, y, z) {
   let grass = grassModel.clone();
   grass.scale.set(2, 2, 2);
   grass.position.set(x, y, z);
+
+  // Apply shadows, traverse through 3D object
   grass.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
     }
   });
-
   scene.add(grass);
 }
 
@@ -256,6 +253,7 @@ road4.rotation.x = -Math.PI / 2; // Rotate to lay flat
 road4.position.set(10, 0.1, -7);
 scene.add(road4);
 
+//Water
 const water = new Water(waterGeometry, {
   textureWidth: 1024,
   textureHeight: 1024,
@@ -375,7 +373,7 @@ rainFolder
 scene.add(rain);
 updateRainVisibility();
 
-//Sun
+//Sun & pointlight
 const sunLight = new THREE.PointLight(0xffffff, 1000);
 sunLight.position.set(22, 90, 16);
 sunLight.castShadow = true;
@@ -425,6 +423,10 @@ sunFolder
 
 //Orbitcontrols
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.maxDistance = 200;
+controls.minDistance = 10;
+controls.update();
 
 //Animate boat
 const spline = new THREE.CatmullRomCurve3([
@@ -437,7 +439,6 @@ const spline = new THREE.CatmullRomCurve3([
 ]);
 
 let t = 0;
-//const speed = 0.0005;
 const speed = 0.0005;
 
 function animateBoat() {
@@ -464,6 +465,7 @@ function updateBoatRotation(direction) {
 function animate() {
   requestAnimationFrame(animate);
   animateBoat();
+  controls.update();
 
   water.material.uniforms["time"].value += 1.0 / 500.0;
 
