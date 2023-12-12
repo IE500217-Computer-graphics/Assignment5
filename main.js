@@ -12,7 +12,7 @@ const gui = new dat.GUI();
 const scene = new THREE.Scene();
 //scene.background = new THREE.Color(0x87ceeb);
 const camera = new THREE.PerspectiveCamera(
-  75,
+  80,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -37,17 +37,23 @@ scene.background = skybox;
 
 const gltfLoader = new GLTFLoader();
 
-// Load the GLTF file
 let boat;
 
 gltfLoader.load(
   "public/wooden_boat-gltf/scene.gltf",
   function (gltf) {
-    // Removed the arrow function syntax here
     scene.add(gltf.scene);
     gltf.scene.scale.set(0.04, 0.04, 0.04); //Scale down boat
     gltf.scene.position.set(22, 0, -30);
+
     boat = gltf.scene;
+
+    boat.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
   },
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
@@ -56,6 +62,110 @@ gltfLoader.load(
     console.log("An error happened: " + error);
   }
 );
+
+let treeModel;
+
+gltfLoader.load(
+  "public/pine_tree/scene.gltf",
+  function (gltf) {
+    treeModel = gltf.scene;
+
+    // Example: Add trees at different locations
+    addTree(-4, 0, -28);
+    addTree(-2, 0, -15);
+    addTree(2, 0, 5);
+    // Add as many trees as you like
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addTree(x, y, z) {
+  let tree = treeModel.clone();
+  tree.scale.set(4, 4, 4);
+  tree.position.set(x, y, z);
+
+  tree.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  scene.add(tree);
+}
+
+let bushModel;
+
+gltfLoader.load(
+  "public/tall_bush/scene.gltf",
+  function (gltf) {
+    bushModel = gltf.scene;
+
+    addBush(-2, 0, -35);
+    addBush(4, 0, -20);
+    addBush(-3, 0, -5);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addBush(x, y, z) {
+  let bush = bushModel.clone();
+  bush.scale.set(1, 1, 1);
+  bush.position.set(x, y, z);
+
+  bush.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  scene.add(bush);
+}
+
+let grassModel;
+
+gltfLoader.load(
+  "public/grass_patch/scene.gltf",
+  function (gltf) {
+    grassModel = gltf.scene;
+
+    addGrass(-3, 0, -23);
+    addGrass(6, 0, -10);
+    addGrass(8, 0, 5);
+    addGrass(7, 0, -35);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addGrass(x, y, z) {
+  let grass = grassModel.clone();
+  grass.scale.set(2, 2, 2);
+  grass.position.set(x, y, z);
+  grass.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  scene.add(grass);
+}
 
 //Ambient sound
 const listener = new THREE.AudioListener();
@@ -82,8 +192,8 @@ soundFolder
 
 //Objects
 const BoxGeometry = new THREE.BoxGeometry(100, 5, 100, 32, 32, 32);
-const houseGeometry = new THREE.BoxGeometry(3, 10, 3);
-const roofGeometry = new THREE.ConeGeometry(3, 5, 4);
+const houseGeometry = new THREE.BoxGeometry(6, 40, 6);
+const roofGeometry = new THREE.ConeGeometry(4.3, 27, 4);
 const roadGeometry = new THREE.PlaneGeometry(4, 100); //OK
 const roadGeometry2 = new THREE.PlaneGeometry(4, 42);
 const roadGeometry3 = new THREE.PlaneGeometry(4, 0);
@@ -115,11 +225,11 @@ scene.add(box);
 const house = new THREE.Mesh(houseGeometry, houseMaterial);
 house.castShadow = true;
 house.receiveShadow = true;
-house.position.set(-20, 4, -18);
+house.position.set(-20, 19.5, -18);
 scene.add(house);
 
 const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-roof.position.set(-20, 11, -18);
+roof.position.set(-20, 53, -18);
 roof.rotation.y = 45 * (Math.PI / 180);
 scene.add(roof);
 
@@ -164,6 +274,7 @@ const water = new Water(waterGeometry, {
 
 water.position.set(30, -2.5, -20);
 water.rotation.x = -Math.PI / 2;
+water.receiveShadow = true;
 scene.add(water);
 
 // Lighting
@@ -173,9 +284,7 @@ const ambientLightFolder = lightningFolder.addFolder("Ambientlight");
 
 const pointLight = new THREE.PointLight(0xffffff, 2);
 pointLight.castShadow = true;
-pointLight.position.x = -7.6;
-pointLight.position.y = 28;
-pointLight.position.z = 6;
+pointLight.position.set(-7, 6, 28, 6);
 pointLight.intensity = 0;
 scene.add(pointLight);
 
@@ -189,9 +298,11 @@ scene.add(ambientLight);
 ambientLightFolder.add(ambientLight, "intensity", 0, 5);
 
 //Camera position
-camera.position.z = 20;
-camera.position.y = 15;
-camera.position.x = 1;
+camera.position.set(1, 73, 92);
+const cameraFolder = gui.addFolder("Camera");
+cameraFolder.add(camera.position, "x").name("X Position");
+cameraFolder.add(camera.position, "y").name("Y Position");
+cameraFolder.add(camera.position, "z").name("Z Position");
 
 //Fog
 const fogSettings = {
@@ -265,11 +376,11 @@ updateRainVisibility();
 
 //Sun
 const sunLight = new THREE.PointLight(0xffffff, 1000);
-sunLight.position.set(22, 62, 16);
+sunLight.position.set(22, 90, 16);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
-const sunGeometry = new THREE.SphereGeometry(10, 64, 64);
+const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
 const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
 const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
 sunMesh.position.copy(sunLight.position);
@@ -278,7 +389,7 @@ scene.add(sunMesh);
 const sunSettings = {
   sunIntensity: 1500,
   sunPositionX: 22,
-  sunPositionY: 62,
+  sunPositionY: 90,
   sunPositionZ: 16,
 };
 
@@ -297,7 +408,7 @@ sunFolder
     sunMesh.position.x = value; // Update sphere position
   });
 sunFolder
-  .add(sunSettings, "sunPositionY", -100, 100)
+  .add(sunSettings, "sunPositionY", -100, 150)
   .name("Position Y")
   .onChange((value) => {
     sunLight.position.y = value;
@@ -315,33 +426,31 @@ sunFolder
 const controls = new OrbitControls(camera, renderer.domElement);
 
 //Animate boat
-const points = [
+const spline = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(22, 0, -30),
   new THREE.Vector3(20, 0, -15),
   new THREE.Vector3(25, 0, -7),
   new THREE.Vector3(38, 0, -7),
   new THREE.Vector3(38, 0, -30),
   new THREE.Vector3(22, 0, -30),
-];
+]);
 
-let currentPointIndex = 0;
-let lerpFactor = 0.01; // Adjust this for speed
-const threshold = 0.1;
+let t = 0;
+//const speed = 0.0005;
+const speed = 0.001;
 
 function animateBoat() {
-  if (boat.position.distanceTo(points[currentPointIndex]) < threshold) {
-    currentPointIndex = (currentPointIndex + 1) % points.length;
-  }
+  // Update t
+  t = (t + speed) % 1;
 
-  // Calculate the direction vector
-  let direction = points[currentPointIndex]
-    .clone()
-    .sub(boat.position)
-    .normalize();
+  // Get the position on the spline
+  let pos = spline.getPoint(t);
 
   // Update boat position
-  boat.position.lerp(points[currentPointIndex], lerpFactor);
+  boat.position.set(pos.x, pos.y, pos.z);
 
-  // Update boat rotation
+  // Calculate direction and update rotation
+  let direction = spline.getTangent(t).normalize();
   updateBoatRotation(direction);
 }
 
