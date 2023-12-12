@@ -3,13 +3,14 @@ import * as dat from "dat.gui";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Water } from "three/examples/jsm/objects/Water.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 //Debug
 const gui = new dat.GUI();
 
 //Scene & renderer
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
+//scene.background = new THREE.Color(0x87ceeb);
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -22,6 +23,39 @@ document.body.appendChild(renderer.domElement);
 
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const skyboxLoader = new THREE.CubeTextureLoader();
+const skybox = skyboxLoader.load([
+  "public/skybox/right.bmp",
+  "public/skybox/left.bmp",
+  "public/skybox/top.bmp",
+  "public/skybox/bottom.bmp",
+  "public/skybox/front.bmp",
+  "public/skybox/back.bmp",
+]);
+scene.background = skybox;
+
+const gltfLoader = new GLTFLoader();
+
+// Load the GLTF file
+let boat;
+
+gltfLoader.load(
+  "public/wooden_boat-gltf/scene.gltf",
+  function (gltf) {
+    // Removed the arrow function syntax here
+    scene.add(gltf.scene);
+    gltf.scene.scale.set(0.04, 0.04, 0.04); //Scale down boat
+    gltf.scene.position.set(22, 0, -30);
+    boat = gltf.scene;
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
 
 //Ambient sound
 const listener = new THREE.AudioListener();
@@ -47,20 +81,13 @@ soundFolder
   });
 
 //Objects
-const planeGeometry = new THREE.PlaneGeometry(100, 100, 32, 32);
-const vertices = planeGeometry.attributes.position.array;
-for (let i = 0; i < vertices.length; i += 3) {
-  // Modify only the z-coordinate of each vertex
-  vertices[i + 2] = Math.random() * 0.2; // Adjust Z value for height variation
-}
-planeGeometry.computeVertexNormals(); // To smooth out the lighting
-
+const BoxGeometry = new THREE.BoxGeometry(100, 5, 100, 32, 32, 32);
 const houseGeometry = new THREE.BoxGeometry(3, 10, 3);
 const roofGeometry = new THREE.ConeGeometry(3, 5, 4);
 const roadGeometry = new THREE.PlaneGeometry(4, 100); //OK
 const roadGeometry2 = new THREE.PlaneGeometry(4, 42);
 const roadGeometry3 = new THREE.PlaneGeometry(4, 0);
-const waterGeometry = new THREE.PlaneGeometry(30, 45);
+const waterGeometry = new THREE.BoxGeometry(30, 45, 5);
 
 //Materials
 const textureLoader = new THREE.TextureLoader();
@@ -80,19 +107,19 @@ const roadMaterial = new THREE.MeshStandardMaterial({
 });
 
 //Mesh
-const plane = new THREE.Mesh(planeGeometry, grassMaterial);
-plane.receiveShadow = true;
-plane.rotation.x = -Math.PI / 2; // Rotate to lay flat
-scene.add(plane);
+const box = new THREE.Mesh(BoxGeometry, grassMaterial);
+box.position.set(0, -2.6, 0);
+box.receiveShadow = true;
+scene.add(box);
 
 const house = new THREE.Mesh(houseGeometry, houseMaterial);
 house.castShadow = true;
 house.receiveShadow = true;
-house.position.set(5, 4, -12);
+house.position.set(-20, 4, -18);
 scene.add(house);
 
 const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-roof.position.set(5, 11, -12);
+roof.position.set(-20, 11, -18);
 roof.rotation.y = 45 * (Math.PI / 180);
 scene.add(roof);
 
@@ -135,7 +162,7 @@ const water = new Water(waterGeometry, {
   fog: scene.fog !== undefined,
 });
 
-water.position.set(30, 0.1, -20);
+water.position.set(30, -2.5, -20);
 water.rotation.x = -Math.PI / 2;
 scene.add(water);
 
@@ -238,26 +265,26 @@ updateRainVisibility();
 
 //Sun
 const sunLight = new THREE.PointLight(0xffffff, 1000);
-sunLight.position.set(22, 35, 16);
+sunLight.position.set(22, 62, 16);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
-const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+const sunGeometry = new THREE.SphereGeometry(10, 64, 64);
 const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
 const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
 sunMesh.position.copy(sunLight.position);
 scene.add(sunMesh);
 
 const sunSettings = {
-  sunIntensity: 1000,
+  sunIntensity: 1500,
   sunPositionX: 22,
-  sunPositionY: 35,
+  sunPositionY: 62,
   sunPositionZ: 16,
 };
 
 const sunFolder = lightningFolder.addFolder("Sun");
 sunFolder
-  .add(sunSettings, "sunIntensity", 0, 2000)
+  .add(sunSettings, "sunIntensity", 0, 5000)
   .name("Intensity")
   .onChange((value) => {
     sunLight.intensity = value;
@@ -287,8 +314,46 @@ sunFolder
 //Orbitcontrols
 const controls = new OrbitControls(camera, renderer.domElement);
 
+//Animate boat
+const points = [
+  new THREE.Vector3(20, 0, -15),
+  new THREE.Vector3(25, 0, -7),
+  new THREE.Vector3(38, 0, -7),
+  new THREE.Vector3(38, 0, -30),
+  new THREE.Vector3(22, 0, -30),
+];
+
+let currentPointIndex = 0;
+let lerpFactor = 0.01; // Adjust this for speed
+const threshold = 0.1;
+
+function animateBoat() {
+  if (boat.position.distanceTo(points[currentPointIndex]) < threshold) {
+    currentPointIndex = (currentPointIndex + 1) % points.length;
+  }
+
+  // Calculate the direction vector
+  let direction = points[currentPointIndex]
+    .clone()
+    .sub(boat.position)
+    .normalize();
+
+  // Update boat position
+  boat.position.lerp(points[currentPointIndex], lerpFactor);
+
+  // Update boat rotation
+  updateBoatRotation(direction);
+}
+
+function updateBoatRotation(direction) {
+  // Create a new target position for the boat to look at
+  let targetPosition = boat.position.clone().add(direction);
+  boat.lookAt(targetPosition);
+}
+
 function animate() {
   requestAnimationFrame(animate);
+  animateBoat();
 
   water.material.uniforms["time"].value += 1.0 / 500.0;
 
