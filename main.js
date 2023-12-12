@@ -438,7 +438,7 @@ const spline = new THREE.CatmullRomCurve3([
 
 let t = 0;
 //const speed = 0.0005;
-const speed = 0.001;
+const speed = 0.0005;
 
 function animateBoat() {
   // Update t
