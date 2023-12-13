@@ -71,14 +71,14 @@ gltfLoader.load(
   "public/skyscrapers/skyscraper_2/scene.gltf",
   function (gltf) {
     skyscraperModel1 = gltf.scene;
-    addSkyscraper(2, 8, 127,0.5,skyscraperModel1);
-    addSkyscraper(55, 8, 127,0.5,skyscraperModel1);
-    addSkyscraper(2, 8, 145,0.5,skyscraperModel1);
+    addSkyscraper(2, 8, 127, 0.5, skyscraperModel1);
+    addSkyscraper(55, 8, 127, 0.5, skyscraperModel1);
+    addSkyscraper(2, 8, 145, 0.5, skyscraperModel1);
     // addSkyscraper(0, 0, 10,1,skyscraperModel1);
   },
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-  }, 
+  },
   function (error) {
     console.log("An error happened: " + error);
   }
@@ -89,27 +89,26 @@ gltfLoader.load(
   "public/skyscrapers/skyscraper_3/scene.gltf",
   function (gltf) {
     skyscraperModel2 = gltf.scene;
-    addSkyscraper(0, 0, 20,0.1,skyscraperModel2);
-    addSkyscraper(0, 0, 40,0.1,skyscraperModel2);
-    addSkyscraper(21, 0, 40,0.1,skyscraperModel2);
-    addSkyscraper(41, 0, 40,0.1,skyscraperModel2);
-    addSkyscraper(-23, 0, 1,0.1,skyscraperModel2);
-    addSkyscraper(-43, 0, 1,0.1,skyscraperModel2);
+    addSkyscraper(0, 0, 20, 0.1, skyscraperModel2);
+    addSkyscraper(0, 0, 40, 0.1, skyscraperModel2);
+    addSkyscraper(21, 0, 40, 0.1, skyscraperModel2);
+    addSkyscraper(41, 0, 40, 0.1, skyscraperModel2);
+    addSkyscraper(-23, 0, 1, 0.1, skyscraperModel2);
+    addSkyscraper(-43, 0, 1, 0.1, skyscraperModel2);
     // addSkyscraper(0, 0, 10,1,skyscraperModel2);
   },
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-  }, 
+  },
   function (error) {
     console.log("An error happened: " + error);
   }
 );
 
-function addSkyscraper(x, y, z,scale,model) {
+function addSkyscraper(x, y, z, scale, model) {
   let skyscraper = model.clone();
   skyscraper.scale.set(1 * scale, 1 * scale, 1 * scale);
   skyscraper.position.set(x, y, z);
-  
 
   // Apply shadows, traverse through 3D object
   skyscraper.traverse((child) => {
@@ -120,7 +119,6 @@ function addSkyscraper(x, y, z,scale,model) {
   });
   scene.add(skyscraper);
 }
-  
 
 //Trees
 let treeModel;
@@ -188,8 +186,6 @@ function addBush(x, y, z) {
   scene.add(bush);
 }
 
-
-
 //Flowers
 let grassModel;
 gltfLoader.load(
@@ -247,7 +243,7 @@ soundFolder
     sound.setVolume(value);
   });
 
-//Objects
+//Geometry
 const BoxGeometry = new THREE.BoxGeometry(100, 5, 100, 32, 32, 32);
 const houseGeometry = new THREE.BoxGeometry(6, 40, 6);
 const roofGeometry = new THREE.ConeGeometry(4.3, 27, 4);
@@ -433,7 +429,7 @@ scene.add(rain);
 updateRainVisibility();
 
 //Sun & pointlight
-const sunLight = new THREE.PointLight(0xffffff, 1000);
+const sunLight = new THREE.PointLight(0xffffff, 2500);
 sunLight.position.set(22, 150, 16);
 sunLight.castShadow = true;
 scene.add(sunLight);
@@ -444,8 +440,15 @@ const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
 sunMesh.position.copy(sunLight.position);
 scene.add(sunMesh);
 
+const radius = 50;
+const sunSpeed = 0.05;
+
+function setSunOrbitRadius(newRadius) {
+  radius = newRadius;
+}
+
 const sunSettings = {
-  sunIntensity: 1500,
+  sunIntensity: 2500,
   sunPositionX: 22,
   sunPositionY: 150,
   sunPositionZ: 16,
@@ -498,7 +501,7 @@ const spline = new THREE.CatmullRomCurve3([
 ]);
 
 let t = 0;
-const speed = 0.0005;
+const speed = 0.0002;
 
 function animateBoat() {
   // Update t
@@ -525,6 +528,11 @@ function animate() {
   requestAnimationFrame(animate);
   animateBoat();
   controls.update();
+
+  let time = Date.now() * 0.001; // Current time in seconds
+  sunMesh.position.x = Math.cos(time * sunSpeed) * radius;
+  sunMesh.position.z = Math.sin(time * sunSpeed) * radius;
+  sunLight.position.copy(sunMesh.position);
 
   water.material.uniforms["time"].value += 1.0 / 500.0;
 
