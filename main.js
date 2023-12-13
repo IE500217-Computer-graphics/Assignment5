@@ -186,6 +186,37 @@ function addBush(x, y, z) {
   scene.add(bush);
 }
 
+//Bridge
+let bridgeModel;
+gltfLoader.load(
+  "public/bridge/scene.gltf",
+  function (gltf) {
+    bridgeModel = gltf.scene;
+    addBridge(0, 0, -30);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded here im here");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addBridge(x, y, z) {
+  let bridge = bridgeModel.clone();
+  bridge.scale.set(5, 3, 5);
+  bridge.position.set(x, y, z);
+
+  // Apply shadows, traverse through 3D object
+  bridge.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  scene.add(bridge);
+}
+
 //Flowers
 let grassModel;
 gltfLoader.load(

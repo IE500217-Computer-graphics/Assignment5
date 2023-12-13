@@ -1,0 +1,11 @@
+Model Information:
+* title:	A simple medieval wooden bridge
+* source:	https://sketchfab.com/3d-models/a-simple-medieval-wooden-bridge-67e4f0d6d0dd41d6a4c2003fd0ed75cb
+* author:	HolmHansen (https://sketchfab.com/HolmH)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "A simple medieval wooden bridge" (https://sketchfab.com/3d-models/a-simple-medieval-wooden-bridge-67e4f0d6d0dd41d6a4c2003fd0ed75cb) by HolmHansen (https://sketchfab.com/HolmH) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
