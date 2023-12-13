@@ -4,9 +4,13 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+
+
 
 //Controller
 const gui = new dat.GUI();
+let isThirdPerson = true;
 
 //Scene & renderer
 const scene = new THREE.Scene();
@@ -586,10 +590,126 @@ function updateBoatRotation(direction) {
   boat.lookAt(targetPosition);
 }
 
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let moveUp = false;
+let moveDown = false;
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+
+document.addEventListener('keydown', (event) => {
+  switch (event.code) {
+    case 'ArrowUp':
+    case 'KeyW':
+      moveForward = true;
+      break;
+    case 'ArrowLeft':
+    case 'KeyA':
+      moveLeft = true;
+      break;
+    case 'ArrowDown':
+    case 'KeyS':
+      moveBackward = true;
+      break;
+    case 'ArrowRight':
+    case 'KeyD':
+      moveRight = true;
+      break;
+    case "KeyQ":
+      moveUp = true;
+      break;
+    case "KeyE":
+      moveDown = true;
+      break;
+
+  }
+});
+
+document.addEventListener('keyup', (event) => {
+  switch (event.code) {
+    case 'ArrowUp':
+    case 'KeyW':
+      moveForward = false;
+      break;
+    case 'ArrowLeft':
+    case 'KeyA':
+      moveLeft = false;
+      break;
+    case 'ArrowDown':
+    case 'KeyS':
+      moveBackward = false;
+      break;
+    case 'ArrowRight':
+    case 'KeyD':
+      moveRight = false;
+      break;
+    case "KeyQ":
+      moveUp = false;
+      break;
+    case "KeyE":
+      moveDown = false;
+      break;
+  }
+});
+
+
+
+const viewSettings = {
+  toggle: false
+};
+
+const firstPerson = gui.addFolder("View Mode");
+firstPerson
+  .add(viewSettings, 'toggle')
+  .name("1st person view")
+  .onChange(toggleView);
+    
+const controls2 = new PointerLockControls(camera, document.body);
+    
+function toggleView() {
+  if (isThirdPerson) {
+    controls.enabled = false; // Disable orbit controls
+    controls2.lock(); // Lock PointerLockControls for first-person view
+    console.log("Switched to First Person View");
+  } else {
+    controls2.unlock(); // Unlock PointerLockControls to switch back to orbit controls
+    controls.enabled = true; // Enable orbit controls for third-person view
+    console.log("Switched to Third Person View");
+  }
+  isThirdPerson = !isThirdPerson;
+}
+
+const clock = new THREE.Clock();
+
 function animate() {
   requestAnimationFrame(animate);
   animateBoat();
-  controls.update();
+  const delta = clock.getDelta();
+
+  if (isThirdPerson) {
+    controls.update();
+  } else {
+    if (controls2.isLocked === true) {
+      velocity.x -= velocity.x * 10.0 * delta;
+      velocity.y -= velocity.y * 10.0 * delta;
+      velocity.z -= velocity.z * 10.0 * delta;
+      direction.z = Number(moveForward) - Number(moveBackward);
+      direction.y = Number(moveUp) - Number(moveDown);
+      direction.x = Number(moveRight) - Number(moveLeft);
+      direction.normalize(); 
+
+      if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+      if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+      if (moveUp || moveDown) velocity.y -= direction.y * 400.0 * delta; // Increase Y velocity to move up
+    
+
+      controls2.moveRight(-velocity.x * delta);
+      camera.position.y += velocity.y * delta; 
+      controls2.moveForward(-velocity.z * delta);
+    }
+  }
 
   let time = Date.now() * 0.001; // Current time in seconds
   sunMesh.position.x = Math.cos(time * sunSpeed) * radius;
@@ -611,5 +731,6 @@ function animate() {
   rain.geometry.attributes.position.needsUpdate = true; // Required for updating the geometry
   renderer.render(scene, camera);
 }
+
 
 animate();
