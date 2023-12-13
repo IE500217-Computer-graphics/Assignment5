@@ -189,13 +189,13 @@ function addBush(x, y, z) {
 //Bridge
 let bridgeModel;
 gltfLoader.load(
-  "public/bridge/scene.gltf",
+  "public/garden_bridge/scene.gltf",
   function (gltf) {
     bridgeModel = gltf.scene;
-    addBridge(0, 0, -30);
+    addBridge(30, 7, -30);
   },
   function (xhr) {
-    console.log((xhr.loaded / xhr.total) * 100 + "% loaded here im here");
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
   },
   function (error) {
     console.log("An error happened: " + error);
@@ -204,7 +204,7 @@ gltfLoader.load(
 
 function addBridge(x, y, z) {
   let bridge = bridgeModel.clone();
-  bridge.scale.set(5, 3, 5);
+  bridge.scale.set(0.033, 0.03, 0.01);
   bridge.position.set(x, y, z);
 
   // Apply shadows, traverse through 3D object
@@ -216,6 +216,37 @@ function addBridge(x, y, z) {
   });
   scene.add(bridge);
 }
+
+//PlayGround
+let playgroundModel;
+gltfLoader.load(
+  "public/playground/scene.gltf",
+  function (gltf) {
+    playgroundModel = gltf.scene;
+    addPlayground(-25, 0, -35);
+  },
+  function (xhr) {
+    console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+  },
+  function (error) {
+    console.log("An error happened: " + error);
+  }
+);
+
+function addPlayground(x, y, z) {
+  let playground = playgroundModel.clone();
+  playground.scale.set(0.5, 0.5, 0.5);
+  playground.position.set(x, y, z);
+
+  // Apply shadows, traverse through 3D object
+  playground.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  scene.add(playground);
+};
 
 //Flowers
 let grassModel;

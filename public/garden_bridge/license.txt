@@ -1,0 +1,11 @@
+Model Information:
+* title:	Garden Bridge
+* source:	https://sketchfab.com/3d-models/garden-bridge-617cead9ee214a07bfb70b45bf246524
+* author:	Anthony Monteagudo (https://sketchfab.com/anthonymonteagudo)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Garden Bridge" (https://sketchfab.com/3d-models/garden-bridge-617cead9ee214a07bfb70b45bf246524) by Anthony Monteagudo (https://sketchfab.com/anthonymonteagudo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
