@@ -177,7 +177,7 @@ gltfLoader.load(
 
 function addBush(x, y, z) {
   let bush = bushModel.clone();
-  bush.scale.set(1, 1, 1);
+  bush.scale.set(0.3, 0.3, 0.3);
   bush.position.set(x, y, z);
 
   // Apply shadows, traverse through 3D object
@@ -227,7 +227,7 @@ gltfLoader.load(
   "public/playground/scene.gltf",
   function (gltf) {
     playgroundModel = gltf.scene;
-    addPlayground(-25, 0, -35);
+    addPlayground(-30, 0, -35);
   },
   function (xhr) {
     console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
@@ -239,7 +239,7 @@ gltfLoader.load(
 
 function addPlayground(x, y, z) {
   let playground = playgroundModel.clone();
-  playground.scale.set(0.5, 0.5, 0.5);
+  playground.scale.set(0.8, 0.5, 0.8);
   playground.position.set(x, y, z);
 
   // Apply shadows, traverse through 3D object
@@ -273,7 +273,7 @@ gltfLoader.load(
 
 function addGrass(x, y, z) {
   let grass = grassModel.clone();
-  grass.scale.set(2, 2, 2);
+  grass.scale.set(0.5, 0.5, 0.5);
   grass.position.set(x, y, z);
 
   // Apply shadows, traverse through 3D object
@@ -413,7 +413,7 @@ pointLightFolder.add(pointLight.position, "y");
 pointLightFolder.add(pointLight.position, "z");
 pointLightFolder.add(pointLight, "intensity", 0, 100);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 ambientLightFolder.add(ambientLight, "intensity", 0, 5);
 
@@ -594,8 +594,10 @@ let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
-let moveUp = false;
-let moveDown = false;
+let playerOnGround = true;
+let verticalVelocity = 0;
+const gravity = -9.8; // Gravity could be adjusted
+const jumpHeight = 6;
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 
@@ -617,11 +619,17 @@ document.addEventListener('keydown', (event) => {
     case 'KeyD':
       moveRight = true;
       break;
-    case "KeyQ":
-      moveUp = true;
-      break;
-    case "KeyE":
-      moveDown = true;
+    // case "KeyQ":
+    //   moveUp = true;
+    //   break;
+    // case "KeyE":
+    //   moveDown = true;
+    //   break;
+    case 'Space':
+      if (playerOnGround) {
+        verticalVelocity = jumpHeight;
+        playerOnGround = false;
+      }
       break;
 
   }
@@ -670,6 +678,7 @@ const controls2 = new PointerLockControls(camera, document.body);
     
 function toggleView() {
   if (isThirdPerson) {
+    camera.position.set(0,2,0);
     controls.enabled = false; // Disable orbit controls
     controls2.lock(); // Lock PointerLockControls for first-person view
     console.log("Switched to First Person View");
@@ -692,21 +701,29 @@ function animate() {
     controls.update();
   } else {
     if (controls2.isLocked === true) {
-      velocity.x -= velocity.x * 10.0 * delta;
-      velocity.y -= velocity.y * 10.0 * delta;
-      velocity.z -= velocity.z * 10.0 * delta;
+      if (!playerOnGround) {
+        verticalVelocity += gravity * delta;
+      }
+
+      camera.position.y += verticalVelocity * delta;
+
+      velocity.x -= velocity.x * 5.0 * delta;
+      velocity.z -= velocity.z * 5.0 * delta;
       direction.z = Number(moveForward) - Number(moveBackward);
-      direction.y = Number(moveUp) - Number(moveDown);
       direction.x = Number(moveRight) - Number(moveLeft);
       direction.normalize(); 
 
-      if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-      if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
-      if (moveUp || moveDown) velocity.y -= direction.y * 400.0 * delta; // Increase Y velocity to move up
+      if (moveForward || moveBackward) velocity.z -= direction.z * 50.0 * delta;
+      if (moveLeft || moveRight) velocity.x -= direction.x * 50.0 * delta;
+      
+      if (camera.position.y <= 2) {
+        verticalVelocity = 0;
+        camera.position.y = 2;
+        playerOnGround = true;
+      }
     
 
-      controls2.moveRight(-velocity.x * delta);
-      camera.position.y += velocity.y * delta; 
+      controls2.moveRight(-velocity.x * delta); 
       controls2.moveForward(-velocity.z * delta);
     }
   }
