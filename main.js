@@ -4,9 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Water } from "three/examples/jsm/objects/Water.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
-
-
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 
 //Controller
 const gui = new dat.GUI();
@@ -250,7 +248,7 @@ function addPlayground(x, y, z) {
     }
   });
   scene.add(playground);
-};
+}
 
 //Flowers
 let grassModel;
@@ -413,9 +411,9 @@ pointLightFolder.add(pointLight.position, "y");
 pointLightFolder.add(pointLight.position, "z");
 pointLightFolder.add(pointLight, "intensity", 0, 100);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(ambientLight);
-ambientLightFolder.add(ambientLight, "intensity", 0, 5);
+ambientLightFolder.add(ambientLight, "intensity", 0, 1);
 
 //Camera position
 camera.position.set(1, 73, 92);
@@ -601,22 +599,22 @@ const jumpHeight = 6;
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener("keydown", (event) => {
   switch (event.code) {
-    case 'ArrowUp':
-    case 'KeyW':
+    case "ArrowUp":
+    case "KeyW":
       moveForward = true;
       break;
-    case 'ArrowLeft':
-    case 'KeyA':
+    case "ArrowLeft":
+    case "KeyA":
       moveLeft = true;
       break;
-    case 'ArrowDown':
-    case 'KeyS':
+    case "ArrowDown":
+    case "KeyS":
       moveBackward = true;
       break;
-    case 'ArrowRight':
-    case 'KeyD':
+    case "ArrowRight":
+    case "KeyD":
       moveRight = true;
       break;
     // case "KeyQ":
@@ -625,32 +623,31 @@ document.addEventListener('keydown', (event) => {
     // case "KeyE":
     //   moveDown = true;
     //   break;
-    case 'Space':
+    case "Space":
       if (playerOnGround) {
         verticalVelocity = jumpHeight;
         playerOnGround = false;
       }
       break;
-
   }
 });
 
-document.addEventListener('keyup', (event) => {
+document.addEventListener("keyup", (event) => {
   switch (event.code) {
-    case 'ArrowUp':
-    case 'KeyW':
+    case "ArrowUp":
+    case "KeyW":
       moveForward = false;
       break;
-    case 'ArrowLeft':
-    case 'KeyA':
+    case "ArrowLeft":
+    case "KeyA":
       moveLeft = false;
       break;
-    case 'ArrowDown':
-    case 'KeyS':
+    case "ArrowDown":
+    case "KeyS":
       moveBackward = false;
       break;
-    case 'ArrowRight':
-    case 'KeyD':
+    case "ArrowRight":
+    case "KeyD":
       moveRight = false;
       break;
     case "KeyQ":
@@ -662,23 +659,21 @@ document.addEventListener('keyup', (event) => {
   }
 });
 
-
-
 const viewSettings = {
-  toggle: false
+  toggle: false,
 };
 
 const firstPerson = gui.addFolder("View Mode");
 firstPerson
-  .add(viewSettings, 'toggle')
+  .add(viewSettings, "toggle")
   .name("1st person view")
   .onChange(toggleView);
-    
+
 const controls2 = new PointerLockControls(camera, document.body);
-    
+
 function toggleView() {
   if (isThirdPerson) {
-    camera.position.set(0,2,0);
+    camera.position.set(0, 2, 0);
     controls.enabled = false; // Disable orbit controls
     controls2.lock(); // Lock PointerLockControls for first-person view
     console.log("Switched to First Person View");
@@ -711,19 +706,18 @@ function animate() {
       velocity.z -= velocity.z * 5.0 * delta;
       direction.z = Number(moveForward) - Number(moveBackward);
       direction.x = Number(moveRight) - Number(moveLeft);
-      direction.normalize(); 
+      direction.normalize();
 
       if (moveForward || moveBackward) velocity.z -= direction.z * 50.0 * delta;
       if (moveLeft || moveRight) velocity.x -= direction.x * 50.0 * delta;
-      
+
       if (camera.position.y <= 2) {
         verticalVelocity = 0;
         camera.position.y = 2;
         playerOnGround = true;
       }
-    
 
-      controls2.moveRight(-velocity.x * delta); 
+      controls2.moveRight(-velocity.x * delta);
       controls2.moveForward(-velocity.z * delta);
     }
   }
@@ -748,6 +742,5 @@ function animate() {
   rain.geometry.attributes.position.needsUpdate = true; // Required for updating the geometry
   renderer.render(scene, camera);
 }
-
 
 animate();
